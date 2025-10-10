@@ -1,0 +1,10 @@
+Alz_face_api/
+├── _legacy/
+├── model/
+├── src/
+├── scripts/
+├── .gitignore
+├── README.md
+├── poetry.lock
+├── pyproject.toml           
+└── repo_tree.txt
