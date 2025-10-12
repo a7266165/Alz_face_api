@@ -1,8 +1,16 @@
 Alz_face_api/
 ├── _legacy/
 ├── model/
+│   └── xgb_6qds_model.json
 ├── src/
-├── scripts/
+│   └── core/                    # 🔄 需要與analyze同步的核心模組
+│       ├── __init__.py
+│       ├── config.py            # 統一配置參數
+│       ├── preprocess.py        # 影像預處理（鏡射、CLAHE、對齊）
+│       ├── feature_extract.py   # 特徵提取（VGGFace、ArcFace等）
+│       └── README.md            # 同步說明文件
+├── app.py                       # FastAPI主程式
+├── tests/
 ├── .gitignore
 ├── README.md
 ├── poetry.lock
