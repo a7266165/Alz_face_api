@@ -2,3 +2,12 @@ __pycache__*
 
 /_legacy/*
 /workspace/*
+
+external/*
+!external/TopoFR/
+external/TopoFR/*
+!/external/TopoFR/link.txt
+
+!external/dlib/
+external/dlib/*
+!/external/dlib/download_dlib.py
