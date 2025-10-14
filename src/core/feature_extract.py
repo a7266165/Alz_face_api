@@ -107,7 +107,7 @@ class FeatureExtractor:
             # 使用預設設定（會自動下載模型）
             self.arcface_app = FaceAnalysis(
                 name='buffalo_l',
-                providers=['CPUExecutionProvider']
+                providers=['CUDAExecutionProvider', 'CPUExecutionProvider']
             )
             self.arcface_app.prepare(ctx_id=0, det_size=(640, 640))
             
