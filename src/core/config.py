@@ -31,6 +31,7 @@ class PreprocessConfig:
     # ========== 儲存控制 ==========
     save_intermediate: bool = False  # 是否儲存中間結果
     workspace_dir: Optional[Path] = None  # 工作區路徑
+    subject_id: Optional[str] = None  # 受試者 ID
 
     # ========== 處理流程控制 ==========
     steps: List[str] = field(
@@ -52,11 +53,26 @@ class PreprocessConfig:
         if self.workspace_dir:
             self.workspace_dir = Path(self.workspace_dir)
 
-    def get_workspace_subdir(self, subdir: str) -> Optional[Path]:
-        """取得工作區子目錄路徑"""
+    def get_workspace_subdir(self, subdir_name: str) -> Optional[Path]:
+        """
+        取得工作區子目錄路徑
+        
+        Args:
+            subdir_name: 子目錄名稱 (selected, aligned, mirrors, debug)
+            
+        Returns:
+            完整路徑，格式為 workspace_dir/subdir_name/subject_id/
+        """
         if not self.workspace_dir:
             return None
-        return self.workspace_dir / subdir
+        
+        if self.subject_id:
+            path = self.workspace_dir / subdir_name / self.subject_id
+        else:
+            path = self.workspace_dir / subdir_name
+        
+        path.mkdir(parents=True, exist_ok=True)
+        return path
 
 
 @dataclass
