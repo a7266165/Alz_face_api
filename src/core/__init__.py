@@ -5,6 +5,7 @@
 
 from .config import PreprocessConfig, APIConfig, AnalyzeConfig
 from .preprocess import FacePreprocessor, ProcessedFace, FaceInfo
+from .feature_extract import FeatureExtractor
 
 __all__ = [
     "PreprocessConfig",
@@ -13,6 +14,7 @@ __all__ = [
     "FacePreprocessor",
     "ProcessedFace",
     "FaceInfo",
+    "FeatureExtractor",
 ]
 
 __version__ = "1.0.0"
