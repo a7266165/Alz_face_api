@@ -88,13 +88,6 @@ class AsymmetryAnalyzer:
     
     def _load_models(self):
         """載入所有模型"""
-        # 載入預處理器
-        try:
-            self.preprocessor = FacePreprocessor(self.config)
-            logger.info("✓ 預處理器初始化完成")
-        except Exception as e:
-            raise RuntimeError(f"預處理器初始化失敗: {e}")
-        
         # 載入特徵提取器
         try:
             self.feature_extractor = FeatureExtractor()
@@ -145,8 +138,8 @@ class AsymmetryAnalyzer:
         try:
             # Step 1: 預處理
             logger.info("執行預處理...")
-            with self.preprocessor:
-                processed_faces = self.preprocessor.process(images)
+            with FacePreprocessor(self.config) as preprocessor:
+                processed_faces = preprocessor.process(images)
             
             if not processed_faces:
                 logger.warning("預處理未產生有效結果")
