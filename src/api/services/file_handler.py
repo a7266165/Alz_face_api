@@ -114,13 +114,9 @@ class FileHandler:
     
     def _find_image_dir(self, root_dir: Path) -> Path:
         """找到包含圖片的目錄"""
-        for dirpath, _, filenames in root_dir.walk():
-            image_files = [
-                f for f in filenames
-                if Path(f).suffix.lower() in self.SUPPORTED_IMAGE_EXTS
-            ]
-            if image_files:
-                return dirpath
+        for image_path in root_dir.rglob('*'):
+            if image_path.suffix.lower() in self.SUPPORTED_IMAGE_EXTS:
+                return image_path.parent
         return None
     
     def load_images(self, image_dir: Path) -> List[np.ndarray]:
