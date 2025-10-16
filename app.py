@@ -57,8 +57,8 @@ class Config:
     # 模型檔案路徑
     MODEL_DIR = project_root / "model"
     Q6DS_MODEL = MODEL_DIR / "xgb_6qds_model.json"
-    CLASSIFIER_MODEL = MODEL_DIR / "xgb_classifier.json"
-    FEATURE_SELECTION = MODEL_DIR / "feature_selection.json"
+    CLASSIFIER_MODEL = MODEL_DIR / "topofr_average_cdr1.0.json"
+    FEATURE_SELECTION = MODEL_DIR / "topofr_average_cdr1.0_features.json"
     
     # 分析參數
     N_SELECT = 10  # 選擇最正面的圖片數量
