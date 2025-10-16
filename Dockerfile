@@ -11,8 +11,16 @@ ENV TZ=Asia/Taipei
 
 # 安裝系統依賴
 RUN apt-get update && apt-get install -y \
+    tzdata \
     build-essential \
     cmake \
+    software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y \
+    python3.11 \
+    python3.11-dev \
+    python3.11-distutils \
+    python3-pip \
     libgl1 \
     libglib2.0-0 \
     libsm6 \
@@ -23,6 +31,7 @@ RUN apt-get update && apt-get install -y \
     unar \
     wget \
     curl \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # 設定 Python 3.11 為預設
