@@ -88,9 +88,7 @@ class AnalysisService:
                 
                 # Step 3: Flow 2 - 不對稱性分析（最耗時）
                 logger.info("\n[3/4] 人臉不對稱性分析...")
-                # asymmetry_result = self.asymmetry_analyzer.analyze(images)
-                # 暫時不執行不對稱性分析（因為模型可能還沒訓練好）
-                asymmetry_result = None
+                asymmetry_result = self.asymmetry_analyzer.analyze(images)
                 
                 # Step 4: Flow 3 - 生成標記圖片
                 logger.info("\n[4/4] 生成標記圖片...")
@@ -109,6 +107,7 @@ class AnalysisService:
                     success=True,
                     error=None,
                     q6ds_result=q6ds_result,
+                    asymmetry_result=asymmetry_result,
                     marked_figure=marked_figure,
                     processing_time=processing_time,
                     timestamp=datetime.now()
@@ -130,6 +129,7 @@ class AnalysisService:
                 success=False,
                 error=error_msg,
                 q6ds_result=None,
+                asymmetry_result=None,
                 marked_figure=None,
                 processing_time=processing_time,
                 timestamp=datetime.now()

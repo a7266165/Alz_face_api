@@ -26,6 +26,14 @@ class AnalysisResponse(BaseModel):
         le=1.0,
         description="6QDS 認知評估預測分數 (0.0-1.0)"
     )
+
+    # 人臉不對稱性分析結果
+    asymmetry_result: Optional[float] = Field(
+        None,
+        ge=0.0,
+        le=1.0,
+        description="人臉不對稱性預測分數 (0.0-1.0)"
+    )
     
     # 標記圖片
     marked_figure: Optional[str] = Field(
