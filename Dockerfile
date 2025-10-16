@@ -1,27 +1,21 @@
 # ===================================
-# Dockerfile - CPU 版本
-# 修正 Debian Trixie 套件問題
+# Dockerfile - 統一版本（支援 GPU/CPU）
 # ===================================
 
-FROM python:3.11-slim
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
 
 # 安裝系統依賴
 RUN apt-get update && apt-get install -y \
-    # 編譯工具（dlib 需要）
     build-essential \
     cmake \
-    # OpenCV 依賴（新版 Debian 套件名稱）
     libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
     libxrender1 \
-    # dlib 依賴
     libgomp1 \
-    # 壓縮檔支援
     p7zip-full \
     unar \
-    # 工具
     wget \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -35,13 +29,7 @@ COPY pyproject.toml poetry.lock* ./
 RUN pip install --no-cache-dir poetry==2.1.3 && \
     poetry config virtualenvs.create false
 
-# 先安裝 CPU 版本的 PyTorch（避免安裝 CUDA 版本）
-RUN pip install --no-cache-dir \
-    torch==2.7.1 \
-    torchvision==0.22.1 \
-    --index-url https://download.pytorch.org/whl/cpu
-
-# 安裝其他專案依賴（跳過已安裝的 torch）
+# 安裝專案依賴（直接使用 poetry.lock）
 RUN poetry install --no-root --only main --no-interaction --no-ansi
 
 # 複製應用程式碼
@@ -55,11 +43,9 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV LOG_LEVEL=INFO
 
-# 健康檢查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 EXPOSE 8000
 
-# 啟動應用程式
 CMD ["python", "app.py"]

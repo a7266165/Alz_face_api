@@ -5,8 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: face-analysis-api:cpu
-    container_name: face-analysis-api-cpu
+    image: face-analysis-api:latest
+    container_name: face-analysis-api
     ports:
       - "8000:8000"
     volumes:
@@ -19,6 +19,8 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=INFO
+      # GPU 相關（有 GPU 時會自動使用）
+      - CUDA_VISIBLE_DEVICES=0
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -29,8 +31,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '8.0'      # 限制 CPU 使用
-          memory: 8G       # 限制記憶體使用
+          cpus: '8.0'
+          memory: 8G
         reservations:
           cpus: '2.0'
           memory: 4G

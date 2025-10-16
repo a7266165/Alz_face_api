@@ -1,0 +1,69 @@
+# ==================== Python ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+pip-log.txt
+*.egg-info/
+.pytest_cache/
+*.log
+
+# ==================== 虛擬環境 ====================
+AD_api/
+anaconda3/
+
+# ==================== IDE ====================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ==================== OS ====================
+.DS_Store
+Thumbs.db
+
+# ==================== Git ====================
+.git/
+.gitignore
+
+# ==================== Docker ====================
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# ==================== 大型目錄（透過 volume 掛載，不需要複製）====================
+model/
+external/
+workspace/
+data/
+_legacy/
+
+# ==================== 測試與結果 ====================
+tests/
+test_results/
+results/
+output/
+temp/
+tmp/
+test_images/
+
+# ==================== 壓縮檔 ====================
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+
+# ==================== 文檔 ====================
+*.md
+docs/
+
+# ==================== Notebooks ====================
+*.ipynb
+.ipynb_checkpoints/
