@@ -7,9 +7,10 @@ FROM python:3.11-slim
 
 # 安裝系統依賴
 RUN apt-get update && apt-get install -y \
-    # OpenCV 依賴（新版 Debian 套件名稱）
+    # 編譯工具（dlib 需要）
     build-essential \
     cmake \
+    # OpenCV 依賴（新版 Debian 套件名稱）
     libgl1 \
     libglib2.0-0 \
     libsm6 \
@@ -30,11 +31,17 @@ WORKDIR /app
 # 複製依賴檔案
 COPY pyproject.toml poetry.lock* ./
 
-# 安裝 Poetry（輕量級方式）
+# 安裝 Poetry
 RUN pip install --no-cache-dir poetry==2.1.3 && \
     poetry config virtualenvs.create false
 
-# 安裝專案依賴
+# 先安裝 CPU 版本的 PyTorch（避免安裝 CUDA 版本）
+RUN pip install --no-cache-dir \
+    torch==2.7.1 \
+    torchvision==0.22.1 \
+    --index-url https://download.pytorch.org/whl/cpu
+
+# 安裝其他專案依賴（跳過已安裝的 torch）
 RUN poetry install --no-root --only main --no-interaction --no-ansi
 
 # 複製應用程式碼
