@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  face-analysis-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: face-analysis-api:cpu
+    container_name: face-analysis-api-cpu
+    ports:
+      - "8000:8000"
+    volumes:
+      # 模型檔案（唯讀）
+      - ./model:/app/model:ro
+      # 外部依賴（dlib, TopoFR）
+      - ./external:/app/external:ro
+      # 工作區（可讀寫）
+      - ./workspace:/app/workspace
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'      # 限制 CPU 使用
+          memory: 8G       # 限制記憶體使用
+        reservations:
+          cpus: '2.0'
+          memory: 4G

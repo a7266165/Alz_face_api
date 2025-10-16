@@ -1,0 +1,38 @@
+services:
+  face-analysis-api-gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile.gpu
+    image: face-analysis-api:gpu
+    container_name: face-analysis-api-gpu
+    ports:
+      - "8001:8000"  # 使用不同端口避免與 CPU 版本衝突
+    volumes:
+      # 模型檔案（唯讀）
+      - ./model:/app/model:ro
+      # 外部依賴（dlib, TopoFR）
+      - ./external:/app/external:ro
+      # 工作區（可讀寫）
+      - ./workspace:/app/workspace
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      - CUDA_VISIBLE_DEVICES=0
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
