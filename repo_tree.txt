@@ -5,6 +5,8 @@ Alz_face_api/
 │   └── TopoFR
 ├── workspace/
 ├── model/
+│   ├── topofr_average_cdr1.0_features.json
+│   ├── topofr_average_cdr1.0.json
 │   └── xgb_6qds_model.json
 ├── src/
 │   ├── core/                    # 🔄 需要與analyze同步的核心模組
@@ -16,31 +18,30 @@ Alz_face_api/
 │   └── api/                     # API 專屬邏輯
 │       ├── __init__.py
 │       │
-│       ├── schemas/             # ✅ 階段 2 完成
+│       ├── schemas/             
 │       │   ├── __init__.py
 │       │   ├── request.py
 │       │   └── response.py
 │       │
-│       ├── routers/             # 📋 階段 4：HTTP 路由
+│       ├── routers/             
 │       │   ├── __init__.py
 │       │   ├── analyze.py
 │       │   └── health.py
 │       │
-│       ├── services/            # 📋 階段 3：業務邏輯
+│       ├── services/            
 │       │   ├── __init__.py
 │       │   ├── analyzer.py
 │       │   └── file_handler.py
 │       │
-│       ├── models/              # 📋 階段 3：模型管理
+│       ├── models/              
 │       │   ├── __init__.py
 │       │   └── model_manager.py
 │       │
-│       └── middleware/          # 📋 階段 5：中介軟體
+│       └── middleware/          
 │           ├── __init__.py
 │           ├── error_handler.py
 │           └── logging.py
-├── app.py                       # FastAPI主程式
-├── tests/
+├── app.py                       
 ├── .gitignore
 ├── README.md
 ├── Dockerfile                   
