@@ -45,19 +45,19 @@ def get_analysis_service() -> AnalysisService:
 )
 async def analyze(
     file: Annotated[UploadFile, File(description="壓縮檔（支援 .zip, .7z, .rar）")],
-    age: Annotated[int, Form(description="年齡（歲）", ge=0, le=150)],
-    gender: Annotated[int, Form(description="性別 (0=女性, 1=男性)", ge=0, le=1)],
-    education_years: Annotated[int, Form(description="教育年數", ge=0, le=30)],
-    q1: Annotated[int, Form(description="問卷題目 1", ge=0, le=1)],
-    q2: Annotated[int, Form(description="問卷題目 2", ge=0, le=2)],
-    q3: Annotated[int, Form(description="問卷題目 3", ge=0, le=2)],
-    q4: Annotated[int, Form(description="問卷題目 4", ge=0, le=1)],
-    q5: Annotated[int, Form(description="問卷題目 5", ge=0, le=1)],
-    q6: Annotated[int, Form(description="問卷題目 6", ge=0, le=1)],
-    q7: Annotated[int, Form(description="問卷題目 7", ge=0, le=1)],
-    q8: Annotated[int, Form(description="問卷題目 8", ge=0, le=1)],
-    q9: Annotated[int, Form(description="問卷題目 9", ge=0, le=1)],
-    q10: Annotated[int, Form(description="問卷題目 10", ge=0, le=1)],
+    age: Annotated[int, Form(description="年齡（歲）", ge=0, le=150)] = 65,
+    gender: Annotated[int, Form(description="性別 (0=女性, 1=男性)", ge=0, le=1)] = 1,
+    education_years: Annotated[int, Form(description="教育年數", ge=0, le=30)] = 6,
+    q1: Annotated[int, Form(description="問卷題目 1", ge=0, le=1)] = 0 ,
+    q2: Annotated[int, Form(description="問卷題目 2", ge=0, le=2)] = 0,
+    q3: Annotated[int, Form(description="問卷題目 3", ge=0, le=2)] = 2,
+    q4: Annotated[int, Form(description="問卷題目 4", ge=0, le=1)] = 1,
+    q5: Annotated[int, Form(description="問卷題目 5", ge=0, le=1)] = 1,
+    q6: Annotated[int, Form(description="問卷題目 6", ge=0, le=1)] = 1,
+    q7: Annotated[int, Form(description="問卷題目 7", ge=0, le=1)] = 1,
+    q8: Annotated[int, Form(description="問卷題目 8", ge=0, le=1)] = 1,
+    q9: Annotated[int, Form(description="問卷題目 9", ge=0, le=1)] = 1,
+    q10: Annotated[int, Form(description="問卷題目 10", ge=0, le=1)] = 1,
     service: AnalysisService = Depends(get_analysis_service)
 ) -> AnalysisResponse:
     """
