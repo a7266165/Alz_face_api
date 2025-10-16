@@ -65,7 +65,7 @@ async def analyze(
     
     **輸入要求：**
     - 壓縮檔：包含 5-20 張正面人臉照片
-    - 檔案大小：≤ 50MB
+    - 檔案大小：≤ 500MB
     - 支援格式：.zip, .7z, .rar
     - 圖片格式：JPG, JPEG, PNG, BMP, TIFF
     
@@ -92,11 +92,11 @@ async def analyze(
         raise HTTPException(status_code=400, detail=error_msg)
     
     # 驗證檔案大小
-    MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
+    MAX_FILE_SIZE = 500 * 1024 * 1024  # 500MB
     file_content = await file.read()
     
     if len(file_content) > MAX_FILE_SIZE:
-        error_msg = f"檔案大小超過限制（{len(file_content) / 1024 / 1024:.1f}MB > 50MB）"
+        error_msg = f"檔案大小超過限制（{len(file_content) / 1024 / 1024:.1f}MB > 500MB）"
         logger.warning(error_msg)
         raise HTTPException(status_code=400, detail=error_msg)
     

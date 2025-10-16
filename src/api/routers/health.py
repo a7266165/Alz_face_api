@@ -127,7 +127,7 @@ async def root() -> Dict:
             "images": [".jpg", ".jpeg", ".png", ".bmp", ".tiff"]
         },
         "requirements": {
-            "file_size_limit": "50MB",
+            "file_size_limit": "500MB",
             "recommended_images": "5-20 張正面人臉照片",
             "questionnaire_fields": [
                 "age (年齡)",
