@@ -4,6 +4,11 @@
 
 FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
 
+# 避免互動式提示
+ENV DEBIAN_FRONTEND=noninteractive
+# 預設時區（避免 tzdata 詢問）
+ENV TZ=Asia/Taipei
+
 # 安裝系統依賴
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -19,6 +24,14 @@ RUN apt-get update && apt-get install -y \
     wget \
     curl \
     && rm -rf /var/lib/apt/lists/*
+
+# 設定 Python 3.11 為預設
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 && \
+    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
+
+# 升級 pip
+RUN python -m pip install --upgrade pip
 
 WORKDIR /app
 
