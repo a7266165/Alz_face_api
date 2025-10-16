@@ -59,7 +59,8 @@ async def health_check(
         }
         
         # 判斷整體狀態
-        all_healthy = all(models_status.values()[:4])  # 檢查前4個核心模型
+        core_models = ["6qds_predictor", "feature_extractor", "classifier", "visualizer"]
+        all_healthy = all(models_status.get(k, False) for k in core_models)
         status = "healthy" if all_healthy else "unhealthy"
         
         logger.info(f"健康檢查: {status}")
