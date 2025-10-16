@@ -20,7 +20,8 @@ dependencies = [
     "rarfile (>=4.2,<5.0)",
     "xgboost (>=3.0.5,<4.0.0)",
     "fastapi (>=0.119.0,<0.120.0)",
-    "uvicorn (>=0.37.0,<0.38.0)"
+    "uvicorn (>=0.37.0,<0.38.0)",
+    "python-multipart (>=0.0.20,<0.0.21)"
 ]
 
 
