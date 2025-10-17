@@ -2,7 +2,7 @@
 # Dockerfile - 統一版本（支援 GPU/CPU）
 # ===================================
 
-FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
+FROM nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu22.04
 
 # 避免互動式提示
 ENV DEBIAN_FRONTEND=noninteractive
