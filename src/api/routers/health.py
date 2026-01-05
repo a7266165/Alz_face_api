@@ -54,10 +54,10 @@ async def health_check(
         # 額外資訊
         models_status["available_feature_models"] = service.asymmetry_analyzer.feature_extractor.available_models
         models_status["classifier_config"] = {
-            "model": service.asymmetry_analyzer.model_name,
-            "feature_type": service.asymmetry_analyzer.feature_type
+            "model": "topofr",
+            "feature_types": ["average", "absolute_relative_differences"]
         }
-        
+                
         # 判斷整體狀態
         core_models = ["6qds_predictor", "feature_extractor", "classifier", "visualizer"]
         all_healthy = all(models_status.get(k, False) for k in core_models)
