@@ -6,12 +6,13 @@ src/api/services/asymmetry.py
 import logging
 import json
 import re
+import math
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 import numpy as np
 import xgboost as xgb
 
-from src.core import FacePreprocessor, FeatureExtractor, APIConfig
+from src.core import FacePreprocessor, FeatureExtractor, APIConfig, MiVOLOPredictor
 
 logger = logging.getLogger(__name__)
 
@@ -19,26 +20,27 @@ logger = logging.getLogger(__name__)
 class AsymmetryAnalyzer:
     """人臉不對稱性分析器"""
     
+    # 年齡校正閾值
+    AGE_CORRECTION_THRESHOLD = 65.0
+    
     def __init__(
         self,
         classifier_path: Path,
-        feature_selection_path: Path,
+        feature_selection_paths: Dict[str, Path],  # ← 字典
         n_select: int = 10
     ):
         """
         初始化分析器
         
         Args:
-            classifier_path: XGBoost 分類器路徑（例如: arcface_difference_cdr0.5.json）
+            classifier_path: XGBoost 分類器路徑
             feature_selection_path: 特徵選取資訊路徑
             n_select: 選擇最正面的圖片數量
         """
         self.classifier_path = Path(classifier_path)
-        self.feature_selection_path = Path(feature_selection_path)
+        self.feature_selection_paths = {k: Path(v) for k, v in feature_selection_paths.items()}
+        self.feature_selections = {}
         self.n_select = n_select
-        
-        # 從檔名解析模型名稱和特徵類型
-        self.model_name, self.feature_type = self._parse_classifier_name()
         
         # 初始化元件
         self.config = APIConfig(n_select=n_select, save_intermediate=False)
@@ -46,45 +48,9 @@ class AsymmetryAnalyzer:
         self.feature_extractor = None
         self.classifier = None
         self.feature_selection = None
+        self.age_predictor = None
         
         self._load_models()
-    
-    def _parse_classifier_name(self) -> Tuple[str, str]:
-        """
-        從分類器檔名解析模型名稱和特徵類型
-        
-        例如: arcface_difference_cdr0.5.json -> ("arcface", "difference")
-        
-        Returns:
-            (model_name, feature_type)
-        """
-        filename = self.classifier_path.stem  # 去掉副檔名
-        
-        # 使用正則表達式解析
-        # 格式: {model}_{feature_type}_{cdr_info}
-        match = re.match(r'([^_]+)_([^_]+)_cdr', filename)
-        
-        if not match:
-            raise ValueError(
-                f"無法解析分類器檔名: {filename}\n"
-                f"預期格式: {{model}}_{{feature_type}}_cdr{{threshold}}.json"
-            )
-        
-        model_name = match.group(1)
-        feature_type = match.group(2)
-        
-        # 驗證
-        valid_models = {'arcface', 'dlib', 'topofr'}
-        valid_types = {'difference', 'average', 'relative'}
-        
-        if model_name not in valid_models:
-            raise ValueError(f"不支援的模型: {model_name}，可用: {valid_models}")
-        
-        if feature_type not in valid_types:
-            raise ValueError(f"不支援的特徵類型: {feature_type}，可用: {valid_types}")
-        
-        logger.info(f"分類器配置: 模型={model_name}, 特徵類型={feature_type}")
-        return model_name, feature_type
     
     def _load_models(self):
         """載入所有模型"""
@@ -94,26 +60,16 @@ class AsymmetryAnalyzer:
             if not self.feature_extractor.available_models:
                 raise RuntimeError("沒有可用的特徵提取模型")
             
-            # 檢查所需模型是否可用
-            if self.model_name not in self.feature_extractor.available_models:
-                raise RuntimeError(
-                    f"模型 {self.model_name} 不可用，"
-                    f"可用模型: {self.feature_extractor.available_models}"
-                )
-            
             logger.info("✓ 特徵提取器初始化完成")
         except Exception as e:
             raise RuntimeError(f"特徵提取器初始化失敗: {e}")
         
         # 載入特徵選取資訊
         try:
-            with open(self.feature_selection_path, 'r') as f:
-                self.feature_selection = json.load(f)
-            logger.info(
-                f"✓ 特徵選取載入: "
-                f"{self.feature_selection['original_dim']} → "
-                f"{self.feature_selection['selected_dim']} 維"
-            )
+            for feature_type, path in self.feature_selection_paths.items():
+                with open(path, 'r') as f:
+                    self.feature_selections[feature_type] = json.load(f)
+                logger.info(f"✓ 特徵選取載入 ({feature_type}): {self.feature_selections[feature_type]['selected_dim']} 維")
         except Exception as e:
             raise RuntimeError(f"載入特徵選取失敗: {e}")
         
@@ -124,6 +80,28 @@ class AsymmetryAnalyzer:
             logger.info(f"✓ 不對稱性分類器載入: {self.classifier_path.name}")
         except Exception as e:
             raise RuntimeError(f"載入分類器失敗: {e}")
+        
+        # 載入年齡預測器
+        try:
+            self.age_predictor = MiVOLOPredictor()
+            self.age_predictor.initialize()
+            logger.info("✓ 年齡預測器初始化完成")
+        except Exception as e:
+            logger.warning(f"年齡預測器初始化失敗，將跳過年齡校正: {e}")
+            self.age_predictor = None
+    
+    def _sigmoid_correction(self, age: float) -> float:
+        """
+        計算年齡校正係數
+        
+        Args:
+            age: 預測年齡
+            
+        Returns:
+            校正係數 (0 ~ 0.3)
+        """
+        # y = 0.3 / (1 + exp(-0.1 * (age - 32.5)))
+        return 0.3 / (1 + math.exp(-0.1 * (age - 32.5)))
     
     def analyze(self, images: List[np.ndarray]) -> Optional[float]:
         """
@@ -145,28 +123,32 @@ class AsymmetryAnalyzer:
                 logger.warning("預處理未產生有效結果")
                 return None
             
-            logger.info(f"預處理完成: {len(processed_faces)} 對左右臉")
+            logger.info(f"預處理完成: {len(processed_faces)} 張")
             
-            # Step 2: 收集左右臉鏡射圖片
+            # Step 2: 預測年齡
+            predicted_age = None
+            if self.age_predictor:
+                logger.info("預測年齡...")
+                aligned_images = [face.aligned for face in processed_faces if face.aligned is not None]
+                if aligned_images:
+                    predicted_age = self.age_predictor.predict(aligned_images)
+                    if predicted_age:
+                        logger.info(f"預測年齡: {predicted_age:.1f} 歲")
+            
+            # Step 3: 提取特徵
+            logger.info("提取 TopoFR 特徵...")
             left_images = [face.left_mirror for face in processed_faces]
             right_images = [face.right_mirror for face in processed_faces]
             
-            # Step 3: 提取特徵（只提取指定模型）
-            logger.info(f"提取 {self.model_name} 特徵...")
             left_features_dict = self.feature_extractor.extract_features(
-                left_images,
-                models=[self.model_name],
-                verbose=False
+                left_images, models=["topofr"], verbose=False
             )
             right_features_dict = self.feature_extractor.extract_features(
-                right_images,
-                models=[self.model_name],
-                verbose=False
+                right_images, models=["topofr"], verbose=False
             )
             
-            # 取出特徵列表
-            left_features = left_features_dict[self.model_name]
-            right_features = right_features_dict[self.model_name]
+            left_features = left_features_dict["topofr"]
+            right_features = right_features_dict["topofr"]
             
             # 過濾 None
             valid_pairs = [
@@ -183,25 +165,27 @@ class AsymmetryAnalyzer:
             
             logger.info(f"提取完成: {len(valid_pairs)} 對特徵")
             
-            # Step 4: 計算差異特徵
-            logger.info(f"計算 {self.feature_type} 特徵...")
-            diff_features = self._calculate_differences(left_array, right_array)
+            # Step 4: 計算組合特徵
+            logger.info("計算組合特徵...")
+            combined_features = self._compute_combined_features(left_array, right_array)
+            logger.info(f"組合特徵: {combined_features.shape}")
             
-            # Step 5: 對多張圖片的特徵取平均
-            feature_vector = np.mean(diff_features, axis=0)
-            logger.info(f"特徵向量: {feature_vector.shape}")
-            
-            # Step 6: 特徵選取
-            logger.info("執行特徵選取...")
-            selected_features = self._select_features(feature_vector)
-            logger.info(f"選取後: {selected_features.shape}")
-            
-            # Step 7: 預測
+            # Step 5: 預測
             logger.info("執行預測...")
-            prediction = self._predict(selected_features)
+            dmatrix = xgb.DMatrix(combined_features.reshape(1, -1))
+            prediction = float(self.classifier.predict(dmatrix)[0])
+            
+            # Step 6: 年齡校正
+            if predicted_age is not None and predicted_age < self.AGE_CORRECTION_THRESHOLD:
+                correction_factor = self._sigmoid_correction(predicted_age)
+                corrected_prediction = prediction * correction_factor
+                logger.info(
+                    f"年齡校正: {prediction:.4f} × {correction_factor:.4f} = {corrected_prediction:.4f}"
+                )
+                prediction = corrected_prediction
             
             logger.info(f"✓ 不對稱性預測: {prediction:.4f}")
-            return float(prediction)
+            return prediction
             
         except Exception as e:
             logger.error(f"不對稱性分析失敗: {e}")
@@ -209,71 +193,41 @@ class AsymmetryAnalyzer:
             traceback.print_exc()
             return None
     
-    def _calculate_differences(
-        self,
-        left_array: np.ndarray,
-        right_array: np.ndarray
-    ) -> np.ndarray:
-        """
-        計算左右臉差異特徵
-        
-        Args:
-            left_array: 左臉特徵陣列 (N, D)
-            right_array: 右臉特徵陣列 (N, D)
+    def _compute_combined_features(
+            self, 
+            left_array: np.ndarray, 
+            right_array: np.ndarray
+        ) -> np.ndarray:
+            """
+            計算組合特徵：average + absolute_relative_differences
             
-        Returns:
-            差異特徵陣列 (N, D)
-        """
-        if self.feature_type == "difference":
-            # 差異: left - right
-            return left_array - right_array
-        
-        elif self.feature_type == "average":
-            # 平均: (left + right) / 2
-            return (left_array + right_array) / 2
-        
-        elif self.feature_type == "relative":
-            # 相對差異: abs(left - right) / abs(left + right)
+            Args:
+                left_array: 左臉特徵 (N, 512)
+                right_array: 右臉特徵 (N, 512)
+                
+            Returns:
+                組合特徵向量 (selected_dim_avg + selected_dim_abs_rel,)
+            """
+            # 計算 average: (L + R) / 2
+            avg_features = (left_array + right_array) / 2
+            avg_features = np.mean(avg_features, axis=0)  # (512,)
+            
+            # 計算 absolute_relative_differences: |L - R| / √(L² + R²)
             abs_diff = np.abs(left_array - right_array)
-            abs_sum = np.abs(left_array + right_array)
+            norm = np.sqrt(left_array**2 + right_array**2)
+            abs_rel_features = np.zeros_like(abs_diff)
+            mask = norm > 1e-8
+            abs_rel_features[mask] = abs_diff[mask] / norm[mask]
+            abs_rel_features = np.mean(abs_rel_features, axis=0)  # (512,)
             
-            # 避免除以零
-            relative = np.zeros_like(abs_diff)
-            mask = abs_sum > 1e-8
-            relative[mask] = abs_diff[mask] / abs_sum[mask]
+            # 特徵篩選
+            avg_indices = self.feature_selections["average"]["selected_indices"]
+            abs_rel_indices = self.feature_selections["absolute_relative_differences"]["selected_indices"]
             
-            return relative
-        
-        else:
-            raise ValueError(f"未知的特徵類型: {self.feature_type}")
-    
-    def _select_features(self, features: np.ndarray) -> np.ndarray:
-        """
-        根據 feature_selection.json 選取特徵
-        
-        Args:
-            features: 完整特徵向量
+            avg_selected = avg_features[avg_indices]
+            abs_rel_selected = abs_rel_features[abs_rel_indices]
             
-        Returns:
-            選取後的特徵向量
-        """
-        selected_indices = self.feature_selection['selected_indices']
-        return features[selected_indices]
-    
-    def _predict(self, features: np.ndarray) -> float:
-        """
-        使用分類器預測
-        
-        Args:
-            features: 選取後的特徵向量
+            # 串接
+            combined = np.concatenate([avg_selected, abs_rel_selected])
             
-        Returns:
-            預測分數
-        """
-        # 建立 DMatrix
-        dmatrix = xgb.DMatrix(features.reshape(1, -1))
-        
-        # 預測
-        prediction = self.classifier.predict(dmatrix)[0]
-        
-        return prediction
+            return combined

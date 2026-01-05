@@ -6,6 +6,7 @@
 from .config import PreprocessConfig, APIConfig, AnalyzeConfig
 from .preprocess import FacePreprocessor, ProcessedFace, FaceInfo
 from .feature_extract import FeatureExtractor
+from .age_predictor import MiVOLOPredictor
 
 __all__ = [
     "PreprocessConfig",
@@ -15,6 +16,7 @@ __all__ = [
     "ProcessedFace",
     "FaceInfo",
     "FeatureExtractor",
+    "MiVOLOPredictor",
 ]
 
 __version__ = "1.0.0"

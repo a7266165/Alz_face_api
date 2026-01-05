@@ -57,8 +57,11 @@ class Config:
     # 模型檔案路徑
     MODEL_DIR = project_root / "model"
     Q6DS_MODEL = MODEL_DIR / "xgb_6qds_model.json"
-    CLASSIFIER_MODEL = MODEL_DIR / "topofr_average_cdr1.0.json"
-    FEATURE_SELECTION = MODEL_DIR / "topofr_average_cdr1.0_features.json"
+    CLASSIFIER_MODEL = MODEL_DIR / "model_topofr_combined_features.json"
+    FEATURE_SELECTION_PATHS = {
+        "average": MODEL_DIR / "topofr_average_cdr0_features.json",
+        "absolute_relative_differences": MODEL_DIR / "topofr_absolute_relative_differences_cdr0_features.json",
+    }
     
     # 分析參數
     N_SELECT = 10  # 選擇最正面的圖片數量
@@ -103,7 +106,7 @@ async def lifespan(app: FastAPI):
         analysis_service = AnalysisService(
             q6ds_model_path=Config.Q6DS_MODEL,
             classifier_path=Config.CLASSIFIER_MODEL,
-            feature_selection_path=Config.FEATURE_SELECTION,
+            feature_selection_paths=Config.FEATURE_SELECTION_PATHS,
             n_select=Config.N_SELECT
         )
         logger.info("✓ 服務初始化完成")
@@ -127,10 +130,11 @@ def _check_model_files():
     required_files = {
         "6QDS 模型": Config.Q6DS_MODEL,
         "分類器模型": Config.CLASSIFIER_MODEL,
-        "特徵選取": Config.FEATURE_SELECTION,
     }
     
     missing = []
+    
+    # 檢查單一檔案
     for name, path in required_files.items():
         if not path.exists():
             missing.append(f"{name}: {path}")
@@ -138,12 +142,19 @@ def _check_model_files():
         else:
             logger.info(f"✓ {name}: {path.name}")
     
+    # 檢查特徵選取檔案（字典）
+    for feature_type, path in Config.FEATURE_SELECTION_PATHS.items():
+        if not path.exists():
+            missing.append(f"特徵選取 ({feature_type}): {path}")
+            logger.warning(f"⚠️  模型檔案不存在: {path}")
+        else:
+            logger.info(f"✓ 特徵選取 ({feature_type}): {path.name}")
+    
     if missing:
         logger.warning(
             f"缺少 {len(missing)} 個模型檔案\n"
             + "\n".join(f"  - {m}" for m in missing)
         )
-
 
 # ==================== 依賴注入 ====================
 

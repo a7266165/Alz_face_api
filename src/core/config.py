@@ -22,9 +22,10 @@ class PreprocessConfig:
     mirror_size: Tuple[int, int] = (512, 512)  # 輸出鏡射影像大小
     feather_px: int = 2  # 邊緣羽化像素
     margin: float = 0.08  # 畫布邊緣留白比例
+    mirror_method: str = "midline"  # "midline" 或 "flip"
 
     # ========== CLAHE 參數 ==========
-    apply_clahe: bool = True  # 是否應用 CLAHE
+    apply_clahe: bool = False  # 是否應用 CLAHE
     clahe_clip_limit: float = 2.0  # CLAHE 限制參數
     clahe_tile_size: int = 8  # CLAHE 區塊大小
 
@@ -36,10 +37,9 @@ class PreprocessConfig:
     # ========== 處理流程控制 ==========
     steps: List[str] = field(
         default_factory=lambda: [
-            "select",  # 選擇最正面的 n 張
-            "align",  # 角度校正
-            "mirror",  # 生成鏡射
-            "clahe",  # CLAHE 增強
+            "select",     # 選擇最正面的 n 張
+            "align",      # 角度校正
+            "mirror",     # 生成鏡射
         ]
     )
 

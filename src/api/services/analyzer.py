@@ -6,7 +6,7 @@ src/api/services/analyzer.py
 import logging
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict
 from datetime import datetime
 
 from src.api.schemas import QuestionnaireData, AnalysisResponse, ErrorResponse
@@ -25,7 +25,7 @@ class AnalysisService:
         self,
         q6ds_model_path: Path,
         classifier_path: Path,
-        feature_selection_path: Path,
+        feature_selection_paths: Dict[str, Path],  # ← 改這裡
         n_select: int = 10
     ):
         """
@@ -34,7 +34,7 @@ class AnalysisService:
         Args:
             q6ds_model_path: 6QDS 模型路徑
             classifier_path: 不對稱性分類器路徑
-            feature_selection_path: 特徵選取資訊路徑
+            feature_selection_paths: 特徵選取資訊路徑字典
             n_select: 選擇最正面的圖片數量
         """
         self.file_handler = FileHandler()
@@ -42,7 +42,7 @@ class AnalysisService:
         self.visualizer = FaceVisualizer()
         self.asymmetry_analyzer = AsymmetryAnalyzer(
             classifier_path,
-            feature_selection_path,
+            feature_selection_paths,  # ← 改這裡
             n_select
         )
         
