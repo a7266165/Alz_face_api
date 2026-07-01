@@ -1,0 +1,11 @@
+"""API 路由聚合。"""
+
+from fastapi import APIRouter
+
+from . import analyze, health
+
+api_router = APIRouter()
+api_router.include_router(analyze.router)
+api_router.include_router(health.router)
+
+__all__ = ["api_router", "analyze", "health"]

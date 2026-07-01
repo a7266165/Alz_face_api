@@ -1,0 +1,5 @@
+# 第二環境（numpy<2）：landmark 偵測子服務專用，與主環境完全隔離。
+# 與訓練端 Alz_face_asymmetry 對齊：mp.solutions 需 mediapipe<0.10.30 + numpy<2。
+numpy==1.26.4
+mediapipe==0.10.21        # 帶 opencv-contrib(cv2)；0.10.30+ 已移除 mp.solutions，故釘此版
+# 子服務用 Python 內建 http.server，不需額外 web 框架。

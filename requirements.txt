@@ -1,0 +1,28 @@
+# Alz_face_api 依賴（pip 安裝來源）。版本對齊訓練/匯出環境，確保 embedding/age 數值
+# 與模型 pickle 相容（unpickle 與推論重現性）。torch/torchvision 走 cpu wheel index（CPU-only 部署）。
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# 數值關鍵：與 Alz_face_main_analysis / Alz_face_age / Alz_face_embedding_other 一致
+numpy==2.4.3
+scikit-learn==1.8.0
+joblib==1.5.3
+tabpfn==8.0.3              # 模型 pickle 用 8.0.3；跨大版本不相容
+insightface==0.7.3        # ArcFace buffalo_l（embedding）
+onnx==1.21.0
+onnxruntime==1.25.1        # ArcFace 推論後端（CPU）
+torch==2.7.1+cpu
+torchvision==0.22.1+cpu
+transformers==5.6.2        # MiVOLO 載入（age 訓練端同版）
+mivolo @ git+https://github.com/WildChlamydia/MiVOLO.git@fd5e933931758a801210a3d58a54be5adb89f2f8
+
+# 預處理 landmark 偵測由 landmark_service/（mp.solutions，numpy<2 子服務）負責——solutions 需
+# numpy<2、與模型 pickle(numpy2) 互斥，故不裝在主環境。client 用內建 urllib，無需額外套件。
+
+# 壓縮檔輸入：.7z 用 py7zr（純 Python）；.rar 用 rarfile（需系統 unar，見 Dockerfile）
+py7zr>=0.21,<1
+rarfile>=4.2,<5
+
+# Web
+fastapi>=0.119,<1
+uvicorn>=0.37
+python-multipart>=0.0.20

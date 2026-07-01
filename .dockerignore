@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv
+*.egg-info/
+.pytest_cache/
+*.log
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# 大型 / volume 掛載目錄
+model/
+.cache/
+workspace/
+
+# 測試用大檔（勿烤進映像）
+*.7z
+*.zip
+*.rar
+*.mp4
+
+# 診斷輸出
+diagnostics/
+
+# 文檔 / notebooks
+*.md
+docs/
+*.ipynb
+.ipynb_checkpoints/

@@ -1,0 +1,35 @@
+services:
+  alz-face-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: alz-face-api:latest
+    container_name: alz-face-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # 部署模型（LR×2 + TabPFN，唯讀）
+      - ./model:/app/model:ro
+      # 持久化自動下載的權重，避免每次重啟重抓
+      - insightface-cache:/root/.insightface
+      - hf-cache:/root/.cache/huggingface
+    # PYTHONUNBUFFERED / LOG_LEVEL 已烤在 image（Dockerfile），此處不重複設定。
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s          # CPU 模型載入較慢
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+
+volumes:
+  insightface-cache:
+  hf-cache:
