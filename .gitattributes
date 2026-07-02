@@ -1,0 +1,5 @@
+# Shell scripts 必須保持 LF：它們在 Linux 容器內由 shebell（#!/usr/bin/env bash）
+# 解析，若被 Windows 的 autocrlf 轉成 CRLF，shebang 會變成 `bash\r` 而讓容器起不來。
+# 不論在哪個平台 checkout，*.sh 一律用 LF。
+*.sh text eol=lf
+entrypoint.sh text eol=lf

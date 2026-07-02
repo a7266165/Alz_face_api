@@ -48,7 +48,9 @@ RUN python -m venv /opt/lmkenv && \
 
 COPY . .
 
-RUN mkdir -p model && chmod +x /app/entrypoint.sh
+# 防呆：若 host 以 CRLF checkout（Windows autocrlf），去掉 entrypoint.sh 行尾的 \r，
+# 否則容器內 shebang 會被解析成 `bash\r` 而起不來（/usr/bin/env: 'bash\r': No such file...）。
+RUN sed -i 's/\r$//' /app/entrypoint.sh && mkdir -p model && chmod +x /app/entrypoint.sh
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
